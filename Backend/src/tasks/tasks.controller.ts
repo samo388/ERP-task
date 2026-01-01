@@ -1,35 +1,41 @@
 import {
   Controller,
-  Post,
   Get,
+  Post,
+  Patch,
   Body,
+  Param,
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { TasksService } from './tasks.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { CreateTaskDto } from './dto/create-task.dto';
 
-@ApiTags('Tasks')
-@ApiBearerAuth('JWT-auth')
 @Controller('tasks')
 @UseGuards(JwtAuthGuard)
 export class TasksController {
-  constructor(private tasksService: TasksService) {}
+  constructor(private readonly tasksService: TasksService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create new task (Authenticated)' })
-  create(@Body() dto: CreateTaskDto, @Req() req: any) {
+  create(@Body() body: any, @Req() req: any) {
     return this.tasksService.create({
-      ...dto,
+      ...body,
       userId: req.user.userId,
     });
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get logged-in user tasks' })
   getMyTasks(@Req() req: any) {
-    return this.tasksService.findUserTasks(req.user.userId);
+    return this.tasksService.findByUser(req.user.userId);
+  }
+
+  // 🔥 THIS IS THE FIX
+  @Patch(':id/status')
+  updateStatus(
+    @Param('id') id: string,
+    @Body('status') status: 'pending' | 'in_progress' | 'completed',
+    @Req() req: any,
+  ) {
+    return this.tasksService.updateStatus(id, status, req.user.userId);
   }
 }

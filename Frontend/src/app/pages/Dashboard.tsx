@@ -32,7 +32,7 @@ export default function Dashboard() {
   const stats = {
     total: tasks.length,
     pending: tasks.filter(t => t.status === 'pending').length,
-    inProgress: tasks.filter(t => t.status === 'inProgress').length,
+    inProgress: tasks.filter(t => t.status === 'in_progress').length,
     completed: tasks.filter(t => t.status === 'completed').length,
   };
 
@@ -52,7 +52,7 @@ export default function Dashboard() {
 
   // ✏️ Update Status
   const handleStatusChange = async (id: string, status: TaskStatus) => {
-    await TasksAPI.updateTaskStatus(id, status);
+    await TasksAPI.updateStatus(id, status);
     loadTasks();
   };
 
@@ -145,8 +145,9 @@ export default function Dashboard() {
                   className="border rounded px-2 py-1"
                 >
                   <option value="pending">Pending</option>
-                  <option value="inProgress">In Progress</option>
+                  <option value="in_progress">In Progress</option>
                   <option value="completed">Completed</option>
+
                 </select>
 
                 {(isAdmin || user?.sub === task._id) && (

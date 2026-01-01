@@ -1,21 +1,24 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { Document } from 'mongoose';
 
 export type TaskDocument = Task & Document;
 
 @Schema({ timestamps: true })
 export class Task {
   @Prop({ required: true })
-    title!: string;
+  title!: string;
 
   @Prop()
-    description!: string;
+  description?: string;
 
-  @Prop({ default: 'pending' })
-    status!: string;
+  @Prop({
+    enum: ['pending', 'in_progress', 'completed'],
+    default: 'pending',
+  })
+  status!: 'pending' | 'in_progress' | 'completed';
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-    userId!: Types.ObjectId;
+  @Prop({ required: true })
+  userId!: string;
 }
 
 export const TaskSchema = SchemaFactory.createForClass(Task);

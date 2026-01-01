@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Task, TaskDocument } from './schemas/task.schema';
@@ -14,7 +14,26 @@ export class TasksService {
     return this.taskModel.create(data);
   }
 
-  findUserTasks(userId: string) {
-    return this.taskModel.find({ userId });
+  findByUser(userId: string) {
+    return this.taskModel.find({ userId }).sort({ createdAt: -1 });
+  }
+
+  // 🔥 THIS IS THE KEY METHOD
+  async updateStatus(
+    taskId: string,
+    status: 'pending' | 'in_progress' | 'completed',
+    userId: string,
+  ) {
+    const task = await this.taskModel.findOneAndUpdate(
+      { _id: taskId, userId },
+      { status },
+      { new: true },
+    );
+
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
+    return task;
   }
 }
