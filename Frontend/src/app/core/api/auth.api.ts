@@ -1,30 +1,21 @@
 import { apiRequest } from '../http';
 
-export interface LoginPayload {
-  email: string;
-  password: string;
-}
-
-export interface RegisterPayload {
-  name: string;
-  email: string;
-  password: string;
-}
-
-export interface LoginResponse {
-  access_token: string;
-}
-
 export const AuthAPI = {
-  login: (data: LoginPayload) =>
-    apiRequest<LoginResponse>('/auth/login', {
+  async login(data: { email: string; password: string }) {
+    return apiRequest<{ access_token: string }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(data),
-    }),
+    });
+  },
 
-  register: (data: RegisterPayload) =>
-    apiRequest('/auth/register', {
+  async register(data: {
+    name: string;
+    email: string;
+    password: string;
+  }) {
+    return apiRequest('/auth/register', {
       method: 'POST',
       body: JSON.stringify(data),
-    }),
+    });
+  },
 };

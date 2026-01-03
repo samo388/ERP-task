@@ -1,55 +1,47 @@
 import {
   Injectable,
   UnauthorizedException,
-  ConflictException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
+
 import { UsersService } from '../users/users.service';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
-    private jwtService: JwtService,
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
   ) {}
 
-  // 🔐 Register
-  async register(dto: RegisterDto) {
-    const existingUser = await this.usersService.findByEmail(dto.email);
+  async register(name: string, email: string, password: string) {
+    const existingUser = await this.usersService.findByEmail(email);
     if (existingUser) {
-      throw new ConflictException('Email already exists');
+      throw new UnauthorizedException('Email already exists');
     }
 
-    const hashedPassword = await bcrypt.hash(dto.password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await this.usersService.create({
-      name: dto.name,
-      email: dto.email,
+      name,
+      email,
       password: hashedPassword,
     });
 
     return {
-      message: 'User registered successfully',
-      userId: user._id,
+      id: user._id,
+      email: user.email,
     };
   }
 
-  // 🔑 Login
-  async login(dto: LoginDto) {
-    const user = await this.usersService.findByEmail(dto.email);
+  async login(email: string, password: string) {
+    const user = await this.usersService.findByEmail(email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const passwordMatch = await bcrypt.compare(
-      dto.password,
-      user.password,
-    );
-
-    if (!passwordMatch) {
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -59,10 +51,8 @@ export class AuthService {
       role: user.role,
     };
 
-    const token = this.jwtService.sign(payload);
-
     return {
-      access_token: token,
+      access_token: this.jwtService.sign(payload),
     };
   }
 }

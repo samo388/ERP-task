@@ -1,85 +1,89 @@
 import { useState } from 'react';
-import { AuthAPI } from '../core/api/auth.api';
+import { useNavigate, Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { apiRequest } from '../core/http';
 import { TokenService } from '../core/auth/token';
-import '../../styles/auth.css';
 
-type LoginProps = {
-  onSwitchToRegister: () => void;
-};
+export default function Login() {
+  const navigate = useNavigate();
 
-export default function Login({ onSwitchToRegister }: LoginProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setLoading(true);
+
+    if (!email || !password) {
+      toast.error('Email and password are required');
+      return;
+    }
 
     try {
-      const res = await AuthAPI.login({ email, password });
+      setLoading(true);
+
+      const res = await apiRequest<{ access_token: string }>(
+        '/auth/login',
+        {
+          method: 'POST',
+          body: JSON.stringify({ email, password }),
+        }
+      );
+
       TokenService.save(res.access_token);
-      window.location.reload();
-    } catch (err: any) {
-      setError(err?.message || 'Invalid credentials');
+      toast.success('Welcome back');
+      navigate('/dashboard');
+    } catch {
+      // handled globally
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-logo">TM</div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white border rounded-lg p-6 w-full max-w-sm space-y-4"
+      >
+        <h1 className="text-xl font-semibold text-center">
+          Login
+        </h1>
 
-        <h1 className="auth-title">Welcome back</h1>
-        <p className="auth-subtitle">
-          Sign in to your account to continue
-        </p>
+        <input
+          type="email"
+          placeholder="Email"
+          className="w-full border rounded px-3 py-2"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
 
-        <form onSubmit={handleSubmit}>
-          <div className="auth-field">
-            <label>Email</label>
-            <input
-              placeholder="you@company.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
+        <input
+          type="password"
+          placeholder="Password"
+          className="w-full border rounded px-3 py-2"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
 
-          <div className="auth-field">
-            <label>Password</label>
-            <input
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-indigo-600 text-white py-2 rounded disabled:opacity-50"
+        >
+          {loading ? 'Logging in…' : 'Login'}
+        </button>
 
-          {error && <div className="auth-error">{error}</div>}
-
-          <div className="auth-actions">
-            <label>
-              <input type="checkbox" /> Remember me
-            </label>
-            <span className="auth-link">Forgot password?</span>
-          </div>
-
-          <button className="auth-button" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign in'}
-          </button>
-        </form>
-
-        <div className="auth-footer">
+        <p className="text-sm text-center text-gray-600">
           Don’t have an account?{' '}
-          <span className="auth-link" onClick={onSwitchToRegister}>
-            Sign up
-          </span>
-        </div>
-      </div>
+          <Link
+            to="/register"
+            className="text-indigo-600 hover:underline"
+          >
+            Register
+          </Link>
+        </p>
+      </form>
     </div>
   );
 }

@@ -1,79 +1,84 @@
 import { useState } from 'react';
-import { AuthAPI } from '../core/api/auth.api';
-import '../../styles/auth.css';
+import { useNavigate, Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { apiRequest } from '../core/http';
 
-type RegisterProps = {
-  onSwitchToLogin: () => void;
-};
+export default function Register() {
+  const navigate = useNavigate();
 
-export default function Register({ onSwitchToLogin }: RegisterProps) {
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+
+    if (!email || !password) {
+      toast.error('Email and password are required');
+      return;
+    }
 
     try {
-      await AuthAPI.register({ name, email, password });
-      setSuccess('Account created successfully');
-    } catch (err: any) {
-      setError(err?.message || 'Registration failed');
+      setLoading(true);
+
+      await apiRequest('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+
+      toast.success('Account created, please login');
+      navigate('/login');
+    } catch {
+      // handled globally
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-logo">TM</div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white border rounded-lg p-6 w-full max-w-sm space-y-4"
+      >
+        <h1 className="text-xl font-semibold text-center">
+          Register
+        </h1>
 
-        <h1 className="auth-title">Create account</h1>
-        <p className="auth-subtitle">
-          Start managing your tasks today
-        </p>
+        <input
+          type="email"
+          placeholder="Email"
+          className="w-full border rounded px-3 py-2"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
 
-        <form onSubmit={handleSubmit}>
-          <div className="auth-field">
-            <label>Name</label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
+        <input
+          type="password"
+          placeholder="Password"
+          className="w-full border rounded px-3 py-2"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
 
-          <div className="auth-field">
-            <label>Email</label>
-            <input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-indigo-600 text-white py-2 rounded disabled:opacity-50"
+        >
+          {loading ? 'Creating…' : 'Register'}
+        </button>
 
-          <div className="auth-field">
-            <label>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-
-          {error && <div className="auth-error">{error}</div>}
-          {success && <div style={{ color: 'green' }}>{success}</div>}
-
-          <button className="auth-button">Sign up</button>
-        </form>
-
-        <div className="auth-footer">
+        <p className="text-sm text-center text-gray-600">
           Already have an account?{' '}
-          <span className="auth-link" onClick={onSwitchToLogin}>
-            Sign in
-          </span>
-        </div>
-      </div>
+          <Link
+            to="/login"
+            className="text-indigo-600 hover:underline"
+          >
+            Login
+          </Link>
+        </p>
+      </form>
     </div>
   );
 }

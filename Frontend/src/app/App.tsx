@@ -1,26 +1,30 @@
-import { useEffect, useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-import { TokenService } from './core/auth/token';
-
-type AuthView = 'login' | 'register';
+import ProtectedRoute from './core/auth/ProtectedRoute';
 
 export default function App() {
-  const [authView, setAuthView] = useState<AuthView>('login');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
-  useEffect(() => {
-    setIsAuthenticated(TokenService.isAuthenticated());
-  }, []);
+        {/* Protected routes */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
 
-  if (!isAuthenticated) {
-    return authView === 'login' ? (
-      <Login onSwitchToRegister={() => setAuthView('register')} />
-    ) : (
-      <Register onSwitchToLogin={() => setAuthView('login')} />
-    );
-  }
-
-  return <Dashboard />;
+        {/* Default redirect */}
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }

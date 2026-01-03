@@ -1,15 +1,4 @@
-import API_CONFIG from '../config/api.config';
-
-
-/**
- * Centralized HTTP helper
- * - Uses Fetch API
- * - Prepends backend base URL
- * - Automatically attaches JWT if present
- * - Handles JSON responses & errors
- */
-
-console.log('API_CONFIG:', API_CONFIG);
+import { API_CONFIG } from '../config/api.config';
 
 export async function apiRequest<T = any>(
   endpoint: string,
@@ -32,14 +21,10 @@ export async function apiRequest<T = any>(
   );
 
   if (!response.ok) {
-    let errorBody: any = {};
-    try {
-      errorBody = await response.json();
-    } catch {
-      errorBody = { message: response.statusText };
-    }
-
-    throw errorBody;
+    const error = await response.json().catch(() => ({
+      message: response.statusText,
+    }));
+    throw error;
   }
 
   return response.json();

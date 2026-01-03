@@ -1,9 +1,5 @@
 import { apiRequest } from '../http';
 
-/* ================================
-   Types
-================================ */
-
 export type TaskStatus = 'pending' | 'in_progress' | 'completed';
 
 export interface Task {
@@ -16,43 +12,31 @@ export interface Task {
   updatedAt: string;
 }
 
-/* ================================
-   API
-================================ */
-
 export const TasksAPI = {
-  /* Get logged-in user's tasks */
   async getMyTasks(): Promise<Task[]> {
-    return apiRequest<Task[]>('/tasks', {
-      method: 'GET',
-    });
+    return apiRequest('/tasks');
   },
 
-  /* Create new task */
   async createTask(data: {
     title: string;
     description?: string;
-  }): Promise<Task> {
-    return apiRequest<Task>('/tasks', {
+  }) {
+    return apiRequest('/tasks', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
-  /* Update task status */
-  async updateStatus(
-    taskId: string,
-    status: TaskStatus
-  ): Promise<Task> {
-    return apiRequest<Task>(`/tasks/${taskId}/status`, {
+  async updateStatus(taskId: string, status: TaskStatus) {
+    return apiRequest(`/tasks/${taskId}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ status }),
     });
   },
 
-  /* Delete task (optional, future-proof) */
-  async deleteTask(taskId: string): Promise<void> {
-    return apiRequest<void>(`/tasks/${taskId}`, {
+  
+  async deleteTask(taskId: string) {
+    return apiRequest(`/tasks/${taskId}`, {
       method: 'DELETE',
     });
   },
